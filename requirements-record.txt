@@ -1,0 +1,2 @@
+# Only for scripts/record_wav.py (manual testing helper); not needed by the server or client.
+sounddevice

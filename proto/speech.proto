@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package speech.v1;
+
+service SpeechService {
+  // Client streams audio; server streams partial transcripts and one final transcript.
+  rpc Transcribe(stream AudioChunk) returns (stream Transcript);
+}
+
+message AudioConfig {
+  int32 sample_rate_hz = 1;   // e.g. 16000
+  int32 channels = 2;         // e.g. 1
+  Encoding encoding = 3;      // e.g. PCM_S16LE
+}
+
+enum Encoding {
+  ENCODING_UNSPECIFIED = 0;
+  PCM_S16LE = 1;
+}
+
+message AudioChunk {
+  oneof payload {
+    AudioConfig config = 1;  // MUST be the first message, exactly once
+    bytes audio = 2;         // raw audio bytes in the declared encoding
+  }
+}
+
+message Transcript {
+  string text = 1;
+  bool is_final = 2;
+  int32 chunks_received = 3;       // chunks consumed when produced
+  float audio_seconds = 4;         // audio duration consumed so far
+}

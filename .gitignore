@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+generated/*_pb2*.py
+*.wav
+!samples/*.wav
