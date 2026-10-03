@@ -4,6 +4,7 @@ Depends only on the gRPC contract; it never imports an ASR library.
 """
 import argparse
 import os
+import shutil
 import sys
 import time
 import wave
@@ -32,8 +33,20 @@ def _show_live(t) -> None:
     if t.is_final:
         sys.stdout.write(f"{CLEAR_LINE}[final] {t.text}\n")
     else:
-        sys.stdout.write(f"{CLEAR_LINE}[partial] {t.text}")
+        sys.stdout.write(f"{CLEAR_LINE}{_fit_live(t.text)}")
     sys.stdout.flush()
+
+
+def _fit_live(text: str) -> str:
+    """Trim a partial to the terminal width (keeping its end) so it never wraps.
+
+    A wrapped line would leave earlier rows behind, since only the cursor's row is cleared.
+    """
+    prefix = "[partial] "
+    room = shutil.get_terminal_size((80, 24)).columns - 1 - len(prefix)
+    if len(text) <= room:
+        return prefix + text
+    return prefix + "…" + text[-(room - 1):] if room > 1 else prefix
 
 
 def _config(rate: int, channels: int):

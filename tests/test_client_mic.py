@@ -186,3 +186,26 @@ def test_overflow_warning(monkeypatch, live_server, capsys):
     use_mic(monkeypatch, fake)
     client.main(["--mic", "--port", str(live_server)])
     assert "audio was dropped" in capsys.readouterr().err
+
+
+def test_live_partial_never_exceeds_terminal_width(monkeypatch):
+    import os
+    monkeypatch.setattr(client.shutil, "get_terminal_size", lambda fallback=None: os.terminal_size((40, 24)))
+    long = "palabra " * 20
+    line = client._fit_live(long)
+    assert len(line) <= 39
+    assert line.startswith("[partial] …") and line.endswith("palabra ")
+    assert client._fit_live("hola") == "[partial] hola"
+    monkeypatch.setattr(client.shutil, "get_terminal_size", lambda fallback=None: os.terminal_size((5, 24)))
+    assert client._fit_live(long) == "[partial] "  # absurdly narrow terminal: no crash
+
+
+def test_final_is_printed_in_full_even_when_long(monkeypatch, live_server, capsys):
+    import os
+    monkeypatch.setattr(client.shutil, "get_terminal_size", lambda fallback=None: os.terminal_size((20, 24)))
+    use_mic(monkeypatch, FakeMic(4))
+    client.main(["--mic", "--port", str(live_server)])
+    out = capsys.readouterr().out
+    assert "[final] palabra1 palabra2 palabra3 palabra4\n" in out
+    assert all(len(seg.split("\r\x1b[2K")[-1]) <= 19
+               for seg in out.split("[final]")[0].split("\n"))
