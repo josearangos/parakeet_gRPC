@@ -3,3 +3,4 @@ grpcio-tools
 protobuf
 parakeet-mlx
 pytest
+sounddevice
