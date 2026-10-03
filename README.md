@@ -32,6 +32,21 @@ Configuration (flags override env vars, which override defaults):
 | `STREAM_WAIT_SECONDS` | `--stream-wait-seconds` | `30` |
 | `LOG_LEVEL` | `--log-level` | `INFO` (`DEBUG` shows every chunk) |
 | `CHUNK_SIZE` (client, ms) | `--chunk-ms` | `500` |
+| (client) | `--mic` | off (transcribe a WAV path instead) |
+
+## Live microphone mode
+
+```bash
+python -m client.client --mic     # speak Spanish; press Enter (or Ctrl+C) to stop
+```
+
+The client captures 16 kHz mono 16-bit audio from the default input device and streams `--chunk-ms` chunks
+over the same `Transcribe` call as WAV mode; the server and `.proto` are unchanged. Partials overwrite one live
+terminal line; the final transcript is printed on its own line, followed by the metrics and the time from stop
+to final. On macOS, allow Microphone access for your terminal (System Settings > Privacy & Security >
+Microphone). Live partials come from the server decoding the audio buffered so far, so earlier words may be
+revised; this is not true incremental decoding. RTF is less meaningful live because the audio duration is
+bounded by how long you speak.
 
 ## Concepts
 
