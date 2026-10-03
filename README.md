@@ -76,6 +76,13 @@ first transcript 3.6 s (includes first-use warm-up), total 8.7 s, **RTF 0.87**. 
 audio arrived (e.g. "una prensa" became "una prueba"), and the final text was clean Spanish apart from the speaker's
 English words, which Parakeet v3 transcribed as heard.
 
+## Verified lifecycle and configuration (T033)
+
+- `GRPC_PORT=50052` works with `--port 50052`; the default port then fails with a clean `UNAVAILABLE` error.
+- Five consecutive runs against one server: "model loaded" logged once; RTF about 0.5 once warm.
+- SIGINT during an active stream: in-flight call ended with `UNAVAILABLE: server is shutting down`, server stopped
+  in 0.5 s, no orphan process, no client traceback.
+
 ## Errors
 
 `INVALID_ARGUMENT` (bad/missing config, unsupported format, misaligned or empty audio, empty stream),

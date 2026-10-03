@@ -103,7 +103,7 @@
 - [X] T030 [P] [US5] Write `tests/test_config.py`: flags override env, env overrides defaults, defaults match spec (`localhost`, `50051`, 16000, 1, model id)
 - [X] T031 [US5] Install SIGINT/SIGTERM handlers in `server/server.py` calling `server.stop(grace=5)` then waiting for termination; ensure `finally` closes stream handles
 - [X] T032 [US5] Verify the model is loaded exactly once: log `model loaded` once at startup and assert in a test that `FakeEngine` constructor is called once across 5 RPCs
-- [ ] T033 [US5] Manually verify quickstart scenarios 3–4 (non-default port, 5 consecutive runs, Ctrl-C mid-stream) and note results in `README.md`
+- [X] T033 [US5] Manually verify quickstart scenarios 3–4 (non-default port, 5 consecutive runs, Ctrl-C mid-stream) and note results in `README.md`
 
 ---
 
