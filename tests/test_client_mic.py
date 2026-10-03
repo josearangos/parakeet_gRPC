@@ -209,3 +209,31 @@ def test_final_is_printed_in_full_even_when_long(monkeypatch, live_server, capsy
     assert "[final] palabra1 palabra2 palabra3 palabra4\n" in out
     assert all(len(seg.split("\r\x1b[2K")[-1]) <= 19
                for seg in out.split("[final]")[0].split("\n"))
+
+
+def test_ctrl_c_stops_capture_and_still_prints_final(monkeypatch, live_server, capsys):
+    import _thread
+
+    class EndlessMic(FakeMic):
+        def __init__(self):
+            super().__init__(0)
+            self.stopped = False
+
+        def chunks(self):
+            i = 0
+            while not self.stopped:
+                i += 1
+                if i == 3:
+                    _thread.interrupt_main()  # simulates Ctrl+C in the main thread
+                yield CHUNK
+                time.sleep(0.02)
+
+        def stop(self):
+            self.stopped = True
+
+    fake = EndlessMic()
+    use_mic(monkeypatch, fake)
+    assert client.main(["--mic", "--port", str(live_server)]) == 0
+    captured = capsys.readouterr()
+    assert fake.stopped and fake.closed
+    assert "[final]" in captured.out and "Traceback" not in captured.err

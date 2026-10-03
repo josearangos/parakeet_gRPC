@@ -6,6 +6,7 @@ import argparse
 import os
 import shutil
 import sys
+import threading
 import time
 import wave
 
@@ -57,26 +58,37 @@ def _config(rate: int, channels: int):
 def _stream(a, requests, show, marks, on_interrupt=None) -> None:
     """Shared loop: send `requests`, show each transcript, record first/final marks.
 
-    Raises grpc.RpcError on RPC failure. A Ctrl+C calls `on_interrupt` (once) and keeps
-    waiting for the final transcript.
+    Raises grpc.RpcError on RPC failure. Transcripts are received on a worker thread so a
+    Ctrl+C in the main thread can call `on_interrupt` (once) and keep waiting for the final
+    transcript; a gRPC response iterator cannot be resumed after being interrupted itself.
     """
-    with grpc.insecure_channel(f"{a.host}:{a.port}") as channel:
-        stub = speech_pb2_grpc.SpeechServiceStub(channel)
-        it = stub.Transcribe(requests)
-        while True:
-            try:
-                for t in it:
+    failure = []
+
+    def receive():
+        try:
+            with grpc.insecure_channel(f"{a.host}:{a.port}") as channel:
+                stub = speech_pb2_grpc.SpeechServiceStub(channel)
+                for t in stub.Transcribe(requests):
                     now = time.perf_counter()
                     marks.setdefault("first", now)
                     show(t)
                     if t.is_final:
                         marks["final"] = now
-                return
-            except KeyboardInterrupt:
-                if on_interrupt is None:
-                    raise
-                on_interrupt()
-                on_interrupt = None  # a second Ctrl+C aborts
+        except BaseException as e:  # re-raised in the caller's thread
+            failure.append(e)
+
+    worker = threading.Thread(target=receive, daemon=True)
+    worker.start()
+    while worker.is_alive():
+        try:
+            worker.join(0.1)
+        except KeyboardInterrupt:
+            if on_interrupt is None:
+                raise
+            on_interrupt()
+            on_interrupt = None  # a second Ctrl+C aborts
+    if failure:
+        raise failure[0]
 
 
 def _run_wav(a) -> int:

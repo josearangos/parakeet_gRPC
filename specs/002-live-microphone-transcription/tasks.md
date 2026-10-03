@@ -86,7 +86,7 @@ description: "Task list for Live Microphone Transcription"
 - [X] T019 [P] Update `README.md`: microphone section (command, Enter/Ctrl+C to stop, macOS permission, live-line display), add `--mic` to the flags table, and a note that live partials come from the server re-decoding buffered audio and may be revised (constitution III); mention RTF is less meaningful for live speech
 - [X] T020 [P] Record the stop-action decision (`--mic`, Enter to stop) in `specs/002-live-microphone-transcription/spec.md` under Clarifications and FR-005/FR-001 wording if still consistent
 - [X] T021 Run `pytest` (all prior tests pass, SC-006) and confirm `git diff --stat` shows no changes under `server/`, `proto/`, or `generated/`
-- [ ] T022 Manual validation with a real microphone and Spanish speech per `specs/002-live-microphone-transcription/quickstart.md` scenarios 1-5 (SC-001..SC-005), noting results in the quickstart
+- [X] T022 Manual validation with a real microphone and Spanish speech per `specs/002-live-microphone-transcription/quickstart.md` scenarios 1-5 (SC-001..SC-005), noting results in the quickstart
 
 ## Dependencies & Execution Order
 
@@ -108,3 +108,4 @@ description: "Task list for Live Microphone Transcription"
 - [X] T024 In `client/client.py` `_run_mic`, print `listening... press Enter to stop` only when stdin is a terminal; otherwise print `listening... press Ctrl+C to stop`, so the stop hint is never wrong when Enter is not listened for, per FR-006 / US2/AC1 (partial)
 - [X] T025 In `client/mic.py` `MicSource._on_audio`, record when PortAudio reports an input overflow in `status` and have `client/client.py` print a one-time `warning: audio was dropped by the device` to stderr after the session, so dropped audio is not silent, per FR-002 / spec edge case "capture continues without dropping audio" (partial)
 - [X] T026 In `client/client.py` `_show_live`, trim each live partial to the terminal width (keep the end of the text, prefix `[partial] …`) so it never wraps and stacks rows, per FR-004 / clarification Q1 (partial; found in manual run T022)
+- [X] T027 In `client/client.py` `_stream`, receive transcripts on a worker thread so Ctrl+C in the main thread stops capture and still awaits the final transcript instead of crashing with a gRPC `ValueError`, per FR-005 / edge case "user interrupts (Ctrl+C) at any point" (contradicts; found in manual run T022); regression test in `tests/test_client_mic.py`
