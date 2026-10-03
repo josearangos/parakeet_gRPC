@@ -5,6 +5,10 @@ transcribes Spanish audio streamed by a thin client (a WAV file or the live micr
 
 ![Architecture](docs/architecture.png)
 
+## Demo
+
+[Watch the demo (docs/demo.mov)](docs/demo.mov)
+
 ## Quick start
 
 ```bash
