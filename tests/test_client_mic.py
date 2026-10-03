@@ -119,3 +119,70 @@ def test_mic_source_drains_queue_after_stop():
     start = time.perf_counter()
     assert list(src.chunks()) == []
     assert time.perf_counter() - start < 1
+
+
+def _fake_sounddevice(monkeypatch, query_error=None, stream_error=None):
+    import sys
+    import types
+    closed = []
+
+    class Stream:
+        def __init__(self, **kw):
+            if stream_error:
+                raise stream_error
+
+        def start(self):
+            pass
+
+        def stop(self):
+            closed.append("stop")
+
+        def close(self):
+            closed.append("close")
+
+    def query_devices(kind=None):
+        if query_error:
+            raise query_error
+
+    mod = types.SimpleNamespace(query_devices=query_devices, RawInputStream=Stream)
+    monkeypatch.setitem(sys.modules, "sounddevice", mod)
+    return closed
+
+
+@pytest.mark.parametrize("kw", [{"query_error": ValueError("No input device matching")},
+                                {"stream_error": OSError("permission denied")}])
+def test_mic_start_failure_becomes_mic_error(monkeypatch, kw):
+    from client.mic import MicSource
+    _fake_sounddevice(monkeypatch, **kw)
+    src = MicSource(500)
+    with pytest.raises(MicError) as e:
+        src.start()
+    assert "Microphone permission" in str(e.value)
+    assert src._stream is None
+
+
+def test_mic_start_success_and_close_releases_stream(monkeypatch):
+    from client.mic import MicSource
+    closed = _fake_sounddevice(monkeypatch)
+    src = MicSource(500)
+    src.start()
+    src.close()
+    assert closed == ["stop", "close"]
+
+
+def test_stop_hint_without_terminal_says_ctrl_c(monkeypatch, live_server, capsys):
+    use_mic(monkeypatch, FakeMic(1))
+    client.main(["--mic", "--port", str(live_server)])  # pytest stdin is not a tty
+    assert "press Ctrl+C to stop" in capsys.readouterr().err
+
+
+def test_overflow_warning(monkeypatch, live_server, capsys):
+    from client.mic import MicSource
+    src = MicSource(500)
+    src._on_audio(CHUNK, 800, None, "input overflow")
+    assert src.overflowed
+    fake = FakeMic(1)
+    fake.overflowed = True
+    use_mic(monkeypatch, fake)
+    client.main(["--mic", "--port", str(live_server)])
+    assert "audio was dropped" in capsys.readouterr().err

@@ -25,6 +25,7 @@ class MicSource:
         self._queue: "queue.Queue[bytes]" = queue.Queue()
         self._stop = threading.Event()
         self._stream = None
+        self.overflowed = False  # PortAudio reported dropped input
 
     def start(self) -> None:
         try:
@@ -41,6 +42,8 @@ class MicSource:
                            "(macOS: System Settings > Privacy & Security > Microphone)") from e
 
     def _on_audio(self, indata, frames, time_info, status) -> None:
+        if status:
+            self.overflowed = True
         self._queue.put(bytes(indata))
 
     def chunks(self) -> Iterator[bytes]:

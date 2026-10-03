@@ -104,6 +104,6 @@ description: "Task list for Live Microphone Transcription"
 
 ## Phase 7: Convergence
 
-- [ ] T023 Add a test in `tests/test_client_mic.py` that monkeypatches `sounddevice` (query_devices / RawInputStream raising) and asserts `MicSource.start()` in `client/mic.py` raises `MicError` with the macOS Microphone-permission hint and leaves no open stream, per FR-007 / US2/AC2 (partial)
-- [ ] T024 In `client/client.py` `_run_mic`, print `listening... press Enter to stop` only when stdin is a terminal; otherwise print `listening... press Ctrl+C to stop`, so the stop hint is never wrong when Enter is not listened for, per FR-006 / US2/AC1 (partial)
-- [ ] T025 In `client/mic.py` `MicSource._on_audio`, record when PortAudio reports an input overflow in `status` and have `client/client.py` print a one-time `warning: audio was dropped by the device` to stderr after the session, so dropped audio is not silent, per FR-002 / spec edge case "capture continues without dropping audio" (partial)
+- [X] T023 Add a test in `tests/test_client_mic.py` that monkeypatches `sounddevice` (query_devices / RawInputStream raising) and asserts `MicSource.start()` in `client/mic.py` raises `MicError` with the macOS Microphone-permission hint and leaves no open stream, per FR-007 / US2/AC2 (partial)
+- [X] T024 In `client/client.py` `_run_mic`, print `listening... press Enter to stop` only when stdin is a terminal; otherwise print `listening... press Ctrl+C to stop`, so the stop hint is never wrong when Enter is not listened for, per FR-006 / US2/AC1 (partial)
+- [X] T025 In `client/mic.py` `MicSource._on_audio`, record when PortAudio reports an input overflow in `status` and have `client/client.py` print a one-time `warning: audio was dropped by the device` to stderr after the session, so dropped audio is not silent, per FR-002 / spec edge case "capture continues without dropping audio" (partial)

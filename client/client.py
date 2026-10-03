@@ -125,9 +125,11 @@ def _run_mic(a) -> int:
         marks["stop"] = time.perf_counter()
 
     try:
-        print("listening... press Enter to stop", file=sys.stderr)
         if sys.stdin.isatty():
+            print("listening... press Enter to stop", file=sys.stderr)
             mic.stop_on_enter(source)
+        else:
+            print("listening... press Ctrl+C to stop", file=sys.stderr)
         _stream(a, requests(), _show_live, marks, on_interrupt=source.stop)
     except grpc.RpcError as e:
         sys.stdout.write("\n")
@@ -140,6 +142,8 @@ def _run_mic(a) -> int:
         return 1
     finally:
         source.close()
+        if getattr(source, "overflowed", False):
+            print("warning: audio was dropped by the device", file=sys.stderr)
 
     if "t0" not in marks or "final" not in marks:
         print("error: no final transcript received", file=sys.stderr)
