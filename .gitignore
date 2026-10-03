@@ -4,4 +4,4 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 generated/*_pb2*.py
-*.wav
+.claude/
