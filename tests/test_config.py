@@ -13,3 +13,10 @@ def test_env_overrides_defaults_and_flags_override_env():
     assert (s.port, s.host) == (6000, "0.0.0.0")
     s = load_settings(["--port", "7000"], env=env)
     assert s.port == 7000
+
+
+def test_log_level_and_stream_wait():
+    s = load_settings([], env={})
+    assert (s.log_level, s.stream_wait_seconds) == ("INFO", 30.0)
+    s = load_settings(["--log-level", "debug"], env={"STREAM_WAIT_SECONDS": "5"})
+    assert (s.log_level, s.stream_wait_seconds) == ("DEBUG", 5.0)

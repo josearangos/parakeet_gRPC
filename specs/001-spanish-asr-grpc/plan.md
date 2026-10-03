@@ -6,7 +6,7 @@
 
 ## Summary
 
-A local gRPC microservice: the server loads Parakeet TDT 0.6B v3 once (via the `parakeet-mlx` library) and exposes one bidirectional-streaming RPC, `Transcribe(stream AudioChunk) returns (stream Transcript)`. A WAV client chunks audio, streams it, prints partial/final transcripts and reports latency metrics. Partials come from the library's streaming context (`transcribe_stream`), emitted every N chunks; a final transcript is sent when the client closes the stream. See [research.md](research.md) for decisions.
+A local gRPC microservice: the server loads Parakeet TDT 0.6B v3 once (via the `parakeet-mlx` library) and exposes one bidirectional-streaming RPC, `Transcribe(stream AudioChunk) returns (stream Transcript)`. A WAV client chunks audio, streams it, prints partial/final transcripts and reports latency metrics. Partials come from the library's streaming context (`transcribe_stream`) on one dedicated MLX thread (one stream at a time, bounded wait), emitted every N chunks; a final transcript is sent when the client closes the stream. See [research.md](research.md) for decisions.
 
 ## Technical Context
 

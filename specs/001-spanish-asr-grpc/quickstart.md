@@ -10,6 +10,11 @@ pip install -r requirements.txt
 ./scripts/gen_proto.sh          # generates speech_pb2*.py from proto/speech.proto
 ```
 
+Record your own test file (optional, needs `pip install -r requirements-record.txt`):
+```bash
+python scripts/record_wav.py --seconds 10     # saves samples/es.wav (16 kHz mono 16-bit)
+```
+
 ## Run
 ```bash
 python -m server.server                      # terminal 1: loads model once, logs "ready"

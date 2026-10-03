@@ -52,3 +52,15 @@ def test_shutting_down_is_unavailable(make_server):
     stub, service = make_server()
     service.stopping.set()
     assert code_of(stub, [config(), audio()]).code() == grpc.StatusCode.UNAVAILABLE
+
+
+def test_engine_busy_is_unavailable(make_server):
+    from server.asr import EngineBusy
+
+    class Busy(FakeEngine):
+        def open_stream(self):
+            raise EngineBusy("another stream is in progress")
+
+    stub, _ = make_server(Busy())
+    err = code_of(stub, [config(), audio()])
+    assert err.code() == grpc.StatusCode.UNAVAILABLE

@@ -13,6 +13,8 @@ class ServerSettings:
     channels: int = 1
     partial_every_n_chunks: int = 1
     max_stream_seconds: float = 300.0
+    stream_wait_seconds: float = 30.0
+    log_level: str = "INFO"
 
 
 def load_settings(argv=None, env=None) -> ServerSettings:
@@ -29,6 +31,12 @@ def load_settings(argv=None, env=None) -> ServerSettings:
                    default=int(env.get("PARTIAL_EVERY_N_CHUNKS", ServerSettings.partial_every_n_chunks)))
     p.add_argument("--max-stream-seconds", type=float,
                    default=float(env.get("MAX_STREAM_SECONDS", ServerSettings.max_stream_seconds)))
+    p.add_argument("--stream-wait-seconds", type=float,
+                   default=float(env.get("STREAM_WAIT_SECONDS", ServerSettings.stream_wait_seconds)),
+                   help="how long a stream waits for the engine while another stream is running")
+    p.add_argument("--log-level", default=env.get("LOG_LEVEL", ServerSettings.log_level),
+                   choices=["DEBUG", "INFO", "WARNING", "ERROR"], type=str.upper)
     a = p.parse_args(argv)
     return ServerSettings(a.model_id, a.host, a.port, a.sample_rate, a.channels,
-                          a.partial_every_n_chunks, a.max_stream_seconds)
+                          a.partial_every_n_chunks, a.max_stream_seconds,
+                          a.stream_wait_seconds, a.log_level)

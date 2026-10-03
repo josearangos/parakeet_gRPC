@@ -29,6 +29,8 @@ Configuration (flags override env vars, which override defaults):
 | `AUDIO_SAMPLE_RATE` / `AUDIO_CHANNELS` | `--sample-rate` / `--channels` | `16000` / `1` |
 | `PARTIAL_EVERY_N_CHUNKS` | `--partial-every-n-chunks` | `1` |
 | `MAX_STREAM_SECONDS` | `--max-stream-seconds` | `300` |
+| `STREAM_WAIT_SECONDS` | `--stream-wait-seconds` | `30` |
+| `LOG_LEVEL` | `--log-level` | `INFO` (`DEBUG` shows every chunk) |
 | `CHUNK_SIZE` (client, ms) | `--chunk-ms` | `500` |
 
 ## Concepts
@@ -63,10 +65,11 @@ Limitations (honest streaming):
 - Streaming switches the encoder to local attention, so text may differ slightly from offline transcription,
   and the trailing "draft" words can change between partials.
 - The streaming context changes shared model state, so streams are processed **one at a time**; a second
-  concurrent stream waits for the first. MLX streams are also bound to their creating thread, so the model is
+  concurrent stream waits up to `STREAM_WAIT_SECONDS` for the first, then gets `UNAVAILABLE`. MLX streams are also bound to their creating thread, so the model is
   loaded and all inference runs on one dedicated worker thread inside `ParakeetEngine`.
 - Parakeet v3 is multilingual and detects the language itself; non-Spanish speech may be transcribed in that language.
 - Streams longer than `MAX_STREAM_SECONDS` are rejected with `RESOURCE_EXHAUSTED`.
+- The server detects misaligned or empty audio chunks, not corrupted audio content; the client reports unreadable or non-PCM WAV files.
 - Only 16-bit PCM at the configured sample rate/channels is accepted; nothing is resampled.
 
 ## Verified run (T018)

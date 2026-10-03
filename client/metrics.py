@@ -1,5 +1,4 @@
 """Latency / chunk metrics for one client run."""
-import math
 from dataclasses import dataclass
 
 
@@ -25,6 +24,3 @@ class RunMetrics:
             f"RTF:                      {self.rtf:.3f}",
         ])
 
-
-def expected_chunk_count(audio_s: float, chunk_s: float) -> int:
-    return math.ceil(round(audio_s / chunk_s, 9))

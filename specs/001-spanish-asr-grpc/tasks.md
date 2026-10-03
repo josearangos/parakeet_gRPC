@@ -136,3 +136,14 @@
 2. Add US2 (partials), then US3 (metrics).
 3. Add US4 (errors) and US5 (config/shutdown).
 4. Polish and README.
+
+---
+
+## Phase 9: Convergence
+
+- [X] T038 Bound the wait for the single-stream lock in `server/asr.py` `ParakeetEngine.open_stream` (timeout, then fail the RPC with `UNAVAILABLE`) and make waiters stop waiting when the server is shutting down in `server/server.py`, so a stalled stream cannot block other clients or shutdown per US5/AC3 and Edge Cases (partial)
+- [X] T039 Make chunk receipt visible per FR-012: add a `LOG_LEVEL` env / `--log-level` flag in `server/config.py` and `server/server.py` (default INFO) or log chunk progress at INFO (partial)
+- [X] T040 Report an unreadable, non-PCM or truncated WAV in `client/client.py` / `client/audio.py` as a clear one-line error (no traceback), add a test in `tests/test_chunking.py`, and note in `README.md` that the server detects alignment problems only per FR-013 / SC-005 (partial)
+- [X] T041 Update `specs/001-spanish-asr-grpc/spec.md` (FR-010: streaming context instead of buffer re-processing; add the `MAX_STREAM_SECONDS` limit and `RESOURCE_EXHAUSTED`), `research.md` (R3, R7: dedicated MLX thread, per-stream lock) and `plan.md` to match the implementation per FR-010 and plan: R3/R7 (contradicts)
+- [X] T042 Decide on `scripts/record_wav.py`, `requirements-record.txt` and the committed `samples/es.wav`: keep them as a documented test helper (mention in `quickstart.md`) or remove them, and untrack `samples/es.wav` if it should not be in git per plan: project structure (unrequested)
+- [X] T043 Use `expected_chunk_count` from `client/metrics.py` in the client's metrics output, or remove it, per SC-004 (unrequested)

@@ -12,6 +12,7 @@ import generated  # noqa: F401  (makes speech_pb2 importable)
 import speech_pb2
 import speech_pb2_grpc
 
+from server.asr import EngineBusy
 from server.config import ServerSettings, load_settings
 
 log = logging.getLogger("asr.server")
@@ -101,6 +102,9 @@ class SpeechService(speech_pb2_grpc.SpeechServiceServicer):
                      chunks, samples_total / self.settings.sample_rate, time.perf_counter() - t0)
             yield speech_pb2.Transcript(text=text, is_final=True, chunks_received=chunks,
                                         audio_seconds=samples_total / self.settings.sample_rate)
+        except EngineBusy as e:
+            log.warning("engine busy: %s", e)
+            context.abort(grpc.StatusCode.UNAVAILABLE, str(e))
         except _Reject as e:
             log.warning("rejected: %s %s", e.code.name, e.message)
             context.abort(e.code, e.message)
@@ -124,10 +128,11 @@ def build_server(engine, settings: ServerSettings):
 def main(argv=None) -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
     settings = load_settings(argv)
+    logging.getLogger().setLevel(settings.log_level)
 
     from server.asr import ParakeetEngine
     log.info("loading model %s", settings.model_id)
-    engine = ParakeetEngine(settings.model_id)
+    engine = ParakeetEngine(settings.model_id, settings.stream_wait_seconds)
     log.info("model loaded")
 
     server, port, service = build_server(engine, settings)
@@ -139,6 +144,8 @@ def main(argv=None) -> None:
     def _stop(signum, _frame):
         log.info("signal %s: shutting down", signum)
         service.stopping.set()
+        if hasattr(engine, "interrupt"):
+            engine.interrupt()
         done.set()
 
     signal.signal(signal.SIGINT, _stop)

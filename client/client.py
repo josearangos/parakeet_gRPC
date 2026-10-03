@@ -6,6 +6,7 @@ import argparse
 import os
 import sys
 import time
+import wave
 
 import grpc
 
@@ -29,7 +30,14 @@ def main(argv=None) -> int:
                    help="override the sample rate declared to the server (testing)")
     a = p.parse_args(argv)
 
-    pcm, rate, channels, width = read_wav(a.wav)
+    try:
+        pcm, rate, channels, width = read_wav(a.wav)
+    except (OSError, EOFError, wave.Error) as e:
+        print(f"error: cannot read {a.wav} as an uncompressed PCM WAV file: {e}", file=sys.stderr)
+        return 2
+    if not pcm:
+        print(f"error: {a.wav} contains no audio", file=sys.stderr)
+        return 2
     if width != 2:
         print(f"error: only 16-bit WAV is supported (got {width * 8}-bit)", file=sys.stderr)
         return 2

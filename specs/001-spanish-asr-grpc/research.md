@@ -29,8 +29,8 @@
 - **Rationale**: Clarification Q1 answered "A". Q2 (long streams) was not answered; this default is an assumption and can be revisited via `/speckit-clarify`.
 
 ## R7 — Concurrency and inference
-- **Decision**: `grpc.server(ThreadPoolExecutor(max_workers=4))`; one shared model; a global lock serializes `add_audio`/finalize calls since MLX inference is not assumed thread-safe; per-RPC streaming context holds state.
-- **Rationale**: Keeps stream state isolated with minimal code.
+- **Decision**: `grpc.server(ThreadPoolExecutor(max_workers=4))`; one shared model. MLX streams are bound to their creating thread, so the model is loaded and ALL inference runs on one dedicated worker thread inside `ParakeetEngine` (verified: inference from gRPC worker threads fails with "There is no Stream(cpu, 1) in current thread"). Entering a streaming context switches the shared encoder's attention mode, so one stream is processed at a time via a `StreamGate`; waiting streams give up after `STREAM_WAIT_SECONDS` (default 30) or on shutdown and get `UNAVAILABLE`.
+- **Rationale**: Isolated stream state, bounded waiting, minimal code.
 
 ## R8 — Errors
 - **Decision**: Map: bad/missing config, unsupported format, odd byte length → `INVALID_ARGUMENT`; model not ready → `FAILED_PRECONDITION`; too long → `RESOURCE_EXHAUSTED`; unexpected exception → `INTERNAL` with generic message (stack trace to server log only); server shutting down → `UNAVAILABLE`.

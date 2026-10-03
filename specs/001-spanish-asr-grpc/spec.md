@@ -44,7 +44,7 @@ While audio is still being sent, the developer sees intermediate transcripts tha
 
 1. **Given** audio is still being streamed, **When** the service has enough audio to produce a result, **Then** it returns a transcript labeled partial without waiting for the stream to end.
 2. **Given** the client has finished sending, **When** the service completes processing, **Then** it returns exactly one transcript labeled final.
-3. **Given** the recognition approach cannot truly decode incrementally, **When** partial results are produced, **Then** they are produced by re-processing the accumulated audio, and this limitation is documented rather than hidden.
+3. **Given** the recognition approach's streaming mode only approximates offline recognition, **When** partial results are produced, **Then** they may be revised as more audio arrives, and this limitation is documented rather than hidden.
 
 ---
 
@@ -104,7 +104,8 @@ The developer can change model identifier, host, port, expected sample rate, cha
 - A chunk boundary falls in the middle of a sample: the service handles it consistently or rejects it clearly.
 - Metadata is missing or changes mid-stream: the service rejects the stream as invalid.
 - Two clients stream at once: each stream's audio buffer remains isolated from the other's.
-- Very long audio: behavior is bounded and documented (buffer growth, rising latency of re-processing).
+- Very long audio: a stream longer than a configurable maximum (default 300 s) is rejected with a resource-exhausted error.
+- A second stream arrives while another is being processed: it waits up to a configurable time (default 30 s), then is rejected as unavailable.
 
 ## Requirements *(mandatory)*
 
@@ -119,11 +120,11 @@ The developer can change model identifier, host, port, expected sample rate, cha
 - **FR-007**: The service MUST buffer audio per stream and MUST NOT treat each chunk as an independent utterance.
 - **FR-008**: The service MUST emit a partial transcript after every N chunks received (N configurable, default 1) while audio is arriving, and MUST label each transcript as partial or final.
 - **FR-009**: The service MUST emit a final transcript after the client ends its stream.
-- **FR-010**: If true incremental decoding is unavailable, the system MUST use the simplest valid buffering strategy (re-processing accumulated audio) and the documentation MUST state this limitation; logs and docs MUST NOT claim true streaming inference unless it is performed.
+- **FR-010**: The system MUST use the model library's streaming mode for partials (state kept per stream); the documentation MUST state that streaming uses an approximation of offline recognition (partials may be revised, the final may differ slightly), and logs and docs MUST NOT claim more than is performed. If streaming were unavailable, the fallback is re-processing the accumulated audio.
 - **FR-011**: The client MUST report time to first transcript, total processing time, real-time factor (processing time ÷ audio duration), number of chunks, chunk duration, and audio duration, measured with a monotonic clock.
 - **FR-012**: The service MUST log request start, chunk receipt, transcript emission, final result, latency, and errors in a lightweight form.
 - **FR-013**: The service MUST reject unsupported sample rate, channel count, encoding, or corrupted audio with a clear message.
-- **FR-014**: The service MUST use appropriate status categories (invalid argument, failed precondition, internal, unavailable) and MUST NOT expose internal stack traces to clients.
+- **FR-014**: The service MUST use appropriate status categories (invalid argument, failed precondition, resource exhausted, internal, unavailable) and MUST NOT expose internal stack traces to clients.
 - **FR-015**: Model identifier, host, port, expected sample rate, expected channels, chunk size, and partial-emission interval (chunks per partial) MUST be configurable (command-line options and/or environment variables) with sensible defaults (model `mlx-community/parakeet-tdt-0.6b-v3`, host `localhost`, port `50051`).
 - **FR-016**: The model MUST be loaded once at service startup, before requests are accepted, not per request.
 - **FR-017**: The service MUST shut down gracefully, ending active streams and releasing resources.
@@ -159,7 +160,8 @@ The developer can change model identifier, host, port, expected sample rate, cha
 - Input audio is Spanish; default audio format is 16 kHz, mono, 16-bit PCM (configurable), and other formats are rejected rather than converted.
 - The client's v1 audio source is a WAV file; microphone input is a future extension that must not require contract changes.
 - No production latency targets are set; metrics exist to observe behavior, not to gate acceptance.
-- Partial results may be produced by re-processing the accumulated audio, so latency per partial grows with audio length; this is accepted and documented.
+- Partials come from the model library's streaming mode and may be revised; streams are processed one at a time (others wait, bounded), and stream length is capped (default 300 s).
+- `scripts/record_wav.py` is a manual-testing helper for recording a WAV; it is not part of the service.
 - Concurrent streams are supported for isolation of state but are not a performance goal.
 - The model weights are downloaded on first use and cached locally; that download is outside the automated tests.
 - Dependencies are kept minimal, and the project layout follows the one in the project constitution (`proto/`, `server/`, `client/`, `tests/`, `requirements.txt`, `README.md`, `.gitignore`).
