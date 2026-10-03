@@ -53,7 +53,9 @@ side avoids per-chunk request overhead and lets the server keep per-stream state
 `AudioChunk` is a `oneof`: the first message carries `AudioConfig` (sample rate, channels, encoding), every
 later one carries raw `audio` bytes. `Transcript` has `text`, `is_final`, `chunks_received`, `audio_seconds`.
 Regenerate code with `scripts/gen_proto.sh`. `generated/__init__.py` (hand-written) puts the folder on
-`sys.path` so the generated `import speech_pb2` works untouched.
+`sys.path` so the generated `import speech_pb2` works untouched. Because that happens at runtime, editors
+cannot see it; `pyrightconfig.json` adds `generated/` to Pylance/Pyright's `extraPaths` so the imports resolve
+(run `scripts/gen_proto.sh` first, since `generated/*_pb2*.py` is gitignored; restart the language server after).
 
 ## Audio buffering and Parakeet integration
 
@@ -106,6 +108,6 @@ and quotas).
 
 ## Layout
 
-`proto/` contract · `generated/` generated code · `server/` (`server.py`, `asr.py`, `config.py`) ·
+`proto/` contract · `generated/` generated code · `pyrightconfig.json` editor import resolution · `server/` (`server.py`, `asr.py`, `config.py`) ·
 `client/` (`client.py`, `audio.py`, `metrics.py`) · `tests/` · `scripts/` (`gen_proto.sh`, `record_wav.py` to
 record a test WAV; needs `requirements-record.txt`)
