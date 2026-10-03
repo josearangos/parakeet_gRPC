@@ -145,6 +145,8 @@ def main(argv=None) -> None:
     signal.signal(signal.SIGTERM, _stop)
     done.wait()
     server.stop(grace=5).wait()
+    if hasattr(engine, "close"):
+        engine.close()
     log.info("stopped")
 
 

@@ -63,10 +63,18 @@ Limitations (honest streaming):
 - Streaming switches the encoder to local attention, so text may differ slightly from offline transcription,
   and the trailing "draft" words can change between partials.
 - The streaming context changes shared model state, so streams are processed **one at a time**; a second
-  concurrent stream waits for the first.
+  concurrent stream waits for the first. MLX streams are also bound to their creating thread, so the model is
+  loaded and all inference runs on one dedicated worker thread inside `ParakeetEngine`.
 - Parakeet v3 is multilingual and detects the language itself; non-Spanish speech may be transcribed in that language.
 - Streams longer than `MAX_STREAM_SECONDS` are rejected with `RESOURCE_EXHAUSTED`.
 - Only 16-bit PCM at the configured sample rate/channels is accepted; nothing is resampled.
+
+## Verified run (T018)
+
+10 s Spanish recording recorded with `scripts/record_wav.py`, 20 chunks of 500 ms, Apple Silicon:
+first transcript 3.6 s (includes first-use warm-up), total 8.7 s, **RTF 0.87**. Early partials were revised as more
+audio arrived (e.g. "una prensa" became "una prueba"), and the final text was clean Spanish apart from the speaker's
+English words, which Parakeet v3 transcribed as heard.
 
 ## Errors
 
@@ -89,4 +97,5 @@ and quotas).
 ## Layout
 
 `proto/` contract · `generated/` generated code · `server/` (`server.py`, `asr.py`, `config.py`) ·
-`client/` (`client.py`, `audio.py`, `metrics.py`) · `tests/` · `scripts/gen_proto.sh`
+`client/` (`client.py`, `audio.py`, `metrics.py`) · `tests/` · `scripts/` (`gen_proto.sh`, `record_wav.py` to
+record a test WAV; needs `requirements-record.txt`)

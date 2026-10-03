@@ -48,7 +48,7 @@
 - [X] T015 [US1] Implement `SpeechService(speech_pb2_grpc.SpeechServiceServicer).Transcribe` in `server/server.py`: first message must be `config`, create `StreamSession`, for each audio chunk convert bytes→int16 samples and call engine; at stream end yield one `Transcript(is_final=True)`; close the handle in `finally`
 - [X] T016 [US1] Add `serve()`/`main()` in `server/server.py`: build settings, load `ParakeetEngine` before `server.start()` (log `ready`), `grpc.server(ThreadPoolExecutor(max_workers=4))`, bind `GRPC_HOST:GRPC_PORT`; runnable via `python -m server.server`
 - [X] T017 [US1] Implement `client/client.py`: argparse (`wav`, `--host`, `--port`, `--chunk-ms` default 500, env `GRPC_HOST`/`GRPC_PORT`/`CHUNK_SIZE`), request generator sending config then audio chunks, print each transcript with `[partial]`/`[final]` label; imports only `grpc`, `generated`, `client.audio` (no MLX/Parakeet)
-- [ ] T018 [US1] Manually verify on a Spanish WAV per `quickstart.md` scenario 1 and note the result in `README.md`
+- [X] T018 [US1] Manually verify on a Spanish WAV per `quickstart.md` scenario 1 and note the result in `README.md`
 
 **Checkpoint**: MVP — end-to-end Spanish transcription over one bidirectional call.
 
