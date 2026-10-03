@@ -1,0 +1,5 @@
+{
+  "extraPaths": ["generated"],
+  "venvPath": ".",
+  "venv": ".venv"
+}
