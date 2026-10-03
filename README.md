@@ -7,7 +7,9 @@ transcribes Spanish audio streamed by a thin client (a WAV file or the live micr
 
 ## Demo
 
-[Watch the demo (docs/demo.mov)](docs/demo.mov)
+![Demo](docs/demo.gif)
+
+[Full video (docs/demo.mov)](docs/demo.mov)
 
 ## Quick start
 
